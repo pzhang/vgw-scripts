@@ -1,0 +1,8 @@
+graphs:
+  call_avg_number:
+    script: draw_graph.rb
+  drops_by_channel:
+    script: draw_graph_drops_channel.rb
+  num_open_calls:
+    script: draw_graph_num_open_calls.rb
+directory: "./graphs"
