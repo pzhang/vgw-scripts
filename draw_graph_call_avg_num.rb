@@ -5,29 +5,25 @@ require 'gnuplot'
 require 'time'
 require 'set'
 
-SAMPLE_INTERVAL = ARGV[2] ? ARGV[2].to_f : 30
-WINDOW_SIZE = ARGV[3] ? ARGV[3].to_f : 5*60
-SMOOTHING_FACTOR = ARGV[4] ? ARGV[4].to_f : 0.1
+sample_interval = config.call_avg_number.sample_interval || SAMPLE_INTERVAL || 30
+window_size = config.call_avg_number.window_size || WINDOW_SIZE || 5*60
+smoothing_factor = config.call_avg_number.smoothing_factor || SMOOTHING_FACTOR || 0.1
 
-starttime = Time.parse(ARGV[0]) if ARGV[0]
-starttime ||= (Time.now - 86400)
-endtime = Time.parse(ARGV[1]) if ARGV[1]
-endtime ||= (Time.now)
+starttime = START_TIME || (Time.now - 86400)
+endtime = END_TIME || (Time.now)
 Gnuplot.open do |gp|
 #File.open("gnuplot.dat", "w") do |gp|
   #collect samples into vectors
-  ARGV.slice!(0,2)
-  events = ARGV unless ARGV.empty?
-  events ||= []
+  events = config.graphs.call_avg_number.events
   find_conditions = {:time => starttime..endtime}
   find_conditions[:event] = events unless events.empty?
-  points = CallsData.find(:all, :conditions => {:time => starttime..endtime}, :order => "time ASC")
+  points = CallsData.find(:all, :conditions => find_conditions, :order => "time ASC")
   x = points.collect { |s| s.time.strftime("%m/%d-%H:%M:%S") }
  # percent_unavail = samples.collect { |s| 100 * s[:CHANUNAVAIL].to_f / s[:DIALED].to_f  }
   event_types = Set.new
   points.each {|s| event_types << s.event}
   if !event_types.empty?
-    ma = MovingAverage.new(SAMPLE_INTERVAL, WINDOW_SIZE, SMOOTHING_FACTOR)
+    ma = MovingAverage.new(sample_interval, window_size, smoothing_factor)
     samples = []
     Gnuplot::Plot.new(gp) do |plot|
       plot.term "png"
@@ -62,6 +58,6 @@ Gnuplot.open do |gp|
     #end
     end
   else
-    puts "Event types incorrectly inputted"
+    puts "Nothing to graph (event types incorrect or no data returned)"
   end
 end

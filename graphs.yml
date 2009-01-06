@@ -1,8 +1,23 @@
 graphs:
   call_avg_number:
-    script: draw_graph.rb
+    script: draw_graph_call_avg_num.rb
+    run_time:
+      - day
+      - month
+      - week
+    directory: call_avg_number
   drops_by_channel:
     script: draw_graph_drops_channel.rb
+    run_time:
+      - day
+      - month
+      - week
+    directory: drops_by_channel
   num_open_calls:
     script: draw_graph_num_open_calls.rb
-directory: "./graphs"
+    run_time:
+      - day
+      - month
+      - week
+    directory: num_open_calls
+directory: graphs

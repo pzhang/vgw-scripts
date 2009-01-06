@@ -1,0 +1,10 @@
+events:
+  - dialed
+  - chanunavail
+  - answered
+  - congestion
+  - close
+  - busy
+sample_interval: 30
+window_size: 300
+smoothing_factor: 0.1
