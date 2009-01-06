@@ -4,19 +4,28 @@ require 'vgw_database'
 require 'gnuplot'
 require 'time'
 require 'set'
+require 'active_config'
 
-sample_interval = config.call_avg_number.sample_interval || SAMPLE_INTERVAL || 30
-window_size = config.call_avg_number.window_size || WINDOW_SIZE || 5*60
-smoothing_factor = config.call_avg_number.smoothing_factor || SMOOTHING_FACTOR || 0.1
-
-starttime = START_TIME || (Time.now - 86400)
-endtime = END_TIME || (Time.now)
+config = ActiveConfig.new(:path => ".")
+sample_interval = config.call_avg_number.sample_interval ? config.call_avg_number.sample_interval.to_f : 30
+window_size = config.call_avg_number.window_size ? config.call_avg_number.window_size.to_f : 5*60
+smoothing_factor = config.call_avg_number.smoothing_factor ? config.call_avg_number.smoothing_factor.to_f : 0.1
+starttime = ARGV[0] ? Time.parse(ARGV[0]) : (Time.now - 86400)
+endtime = ARGV[1] ? Time.parse(ARGV[1]) : (Time.now)
+source = ARGV[2] ? ARGV[2] : "all"
 Gnuplot.open do |gp|
 #File.open("gnuplot.dat", "w") do |gp|
   #collect samples into vectors
-  events = config.graphs.call_avg_number.events
-  find_conditions = {:time => starttime..endtime}
-  find_conditions[:event] = events unless events.empty?
+  events = config.call_avg_number.events
+  find_conditions = ["time BETWEEN ? AND ? ", starttime, endtime] 
+  if events && !events.empty?
+    find_conditions[0] += "AND event IN(?) "
+    find_conditions << events
+  end
+  if source && !source == "all"
+    find_conditions[0] += " AND source = ?"
+    find_conditions << source
+  end
   points = CallsData.find(:all, :conditions => find_conditions, :order => "time ASC")
   x = points.collect { |s| s.time.strftime("%m/%d-%H:%M:%S") }
  # percent_unavail = samples.collect { |s| 100 * s[:CHANUNAVAIL].to_f / s[:DIALED].to_f  }
@@ -49,15 +58,15 @@ Gnuplot.open do |gp|
           ds.with = "lines"
         end
       end
-      plot.output "calls_per_sec_by_events" + 
-                  "-#{starttime.strftime("%m-%d-%Y-%H:%M")}-#{endtime.strftime("%m-%d-%Y-%H:%M")}.png"
+ #     plot.output "calls_per_sec_by_events" +
+  #                "-#{starttime.strftime("%m-%d-%Y-%H:%M")}-" +
+  #               "#{endtime.strftime("%m-%d-%Y-%H:%M")}.png")
+
     #plot.data << Gnuplot::DataSet.new( [x,percent_unavail] ) do |ds|
       #ds.title = "Percent Chanunavail"
       #ds.using = "1:2 axes x1y2"
       #ds.with = "lines"
     #end
     end
-  else
-    puts "Nothing to graph (event types incorrect or no data returned)"
   end
 end

@@ -7,8 +7,15 @@ endtime = Time.parse(ARGV[1]) if ARGV[1]
 endtime ||= (Time.now)
 num_outstanding = 0
 calls = []
-samples = CallsData.find(:all, :conditions => ["time BETWEEN ? AND ? AND event IN (?)",
-                                               starttime,endtime,["close", "open", "dialed"]],
+source = ARGV[2] ? ARGV[2] : "all"
+find_conditions = ["time BETWEEN ? AND ? AND event IN (?)",
+                   starttime,endtime,["close", "open", "dialed"]]
+if source && !source == "all"
+    find_conditions[0] += " AND source = ?"
+    find_conditions << source
+end
+
+samples = CallsData.find(:all, :conditions => find_conditions,
                                                :order => "time ASC")
 samples.each do |s|
   if s.event == "close"
@@ -18,26 +25,28 @@ samples.each do |s|
   end
   calls << num_outstanding
 end
+unless samples.empty?
 Gnuplot.open do |gp|
 #File.open("gnuplot.dat", "w") do |gp|
   #collect samples into vectors
 
   Gnuplot::Plot.new(gp) do |plot|
-    #plot.term "png"
-    plot.xdata "time"
-    plot.timefmt "\"%m/%d-%H:%M:%S\""
-    plot.format "x \"%m/%d %H:%M\""
-    plot.xtics "rotate by 90"
-    plot.ylabel "\"Open Calls\""
+      plot.term "png"
+      plot.xdata "time"
+      plot.timefmt "\"%m/%d-%H:%M:%S\""
+      plot.format "x \"%m/%d %H:%M\""
+      plot.xtics "rotate by 90"
+      plot.ylabel "\"Open Calls\""
 
-    plot.data << Gnuplot::DataSet.new( [samples.collect {|s| s.time.strftime("%m/%d-%H:%M:%S")}, calls] ) do |ds|
-      ds.title = "Num Used Channels"
-      ds.using = "1:2"
-      ds.with = "lines"
+      plot.data << Gnuplot::DataSet.new( [samples.collect {|s| s.time.strftime("%m/%d-%H:%M:%S")}, calls] ) do |ds|
+        ds.title = "Num Used Channels"
+        ds.using = "1:2"
+        ds.with = "lines"
+      end
+ #     plot.output "num_open_calls-#{starttime.strftime("%m-%d-%Y-%H:%M")}-#{endtime.strftime("%m-%d-%Y-%H:%M")}.png"
+
     end
 
-
   end
-
 end
 

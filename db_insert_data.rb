@@ -10,16 +10,20 @@ require 'active_config'
 
 config = ActiveConfig.new(:path => ".")
 DIRECTORY = config.calls_data.directory ? config.calls_data.directory : "."
-
+SEARCH_TERM = config.calls_data.search_term ? config.calls_data.search_term : "**/vgw00*"
 #Parse the data from stdin
-ma= MovingAverage.new(SAMPLE_INTERVAL, WINDOW_SIZE, SMOOTHING_FACTOR)
 samples = []
 last_zap = {}
 updates = []
 noop_types = []
 Dir.chdir(DIRECTORY)
-files = Dir.glob("**/vgw001*")
+files = Dir.glob(SEARCH_TERM)
+puts "files to be retrieved: "
+puts files.inspect
 files.each do |f|
+ 
+  puts "got #{f.inspect}"
+  updates = []
   last_dialed = {}
   readfile = File.new(f, "r")
     while readfile.gets
@@ -29,12 +33,12 @@ files.each do |f|
         #when /CHANUNAVAIL.*Busy/                     : :chan_unavail
         when /CHANUNAVAIL.*Busy\("SIP\/10.224.24.145-(.{8})/   
           event = :CHANUNAVAIL
-          last = last_zap[$1]
+          channel = last_zap[$1]
         when /CHANUNAVAIL.*NoOp\("SIP\/10.224.24.145-(.{8}).*"([A-Z]* HUC: \d*)"/ 
           event = $2
           noop_types << event
           num = last_dialed[$1]
-          code = event.match(/\d*/)
+          code = event.match(/\d+/)[0]
         when /CONGESTION.*Busy/                     
           event = :congestion
         when /Busy\(/                               
@@ -58,14 +62,14 @@ files.each do |f|
   
       if event
         date_str = $_.match(/^\[([^\]]+)\]/)[1]
-        last = nil unless event == :CHANUNAVAIL
+        channel = nil unless event == :CHANUNAVAIL
         num = nil unless (event == :answered || noop_types.include?(event))
         date = Time.parse(date_str)
         date -= 365*24*60*60 if date > Time.now
-        updates << [date, event.to_s.downcase, last, code, num,f]
+        updates << [date, event.to_s.downcase, channel, code, num,f.split("/").last]
       end
     end
+    fields = [:time, :event, :channel,:code, :number,:source]
+    puts "importing #{updates.size} entries"
+    puts CallsData.import fields, updates, :validate => false unless updates.empty?
 end
-fields = [:time, :event, :channel,:code, :number,:source]
-puts CallsData.import fields, updates
-puts "#{updates.size} + imported"
