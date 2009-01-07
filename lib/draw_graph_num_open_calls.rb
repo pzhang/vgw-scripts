@@ -27,8 +27,6 @@ samples.each do |s|
 end
 unless samples.empty?
 Gnuplot.open do |gp|
-#File.open("gnuplot.dat", "w") do |gp|
-  #collect samples into vectors
 
   Gnuplot::Plot.new(gp) do |plot|
       plot.term "png"
@@ -43,7 +41,6 @@ Gnuplot.open do |gp|
         ds.using = "1:2"
         ds.with = "lines"
       end
- #     plot.output "num_open_calls-#{starttime.strftime("%m-%d-%Y-%H:%M")}-#{endtime.strftime("%m-%d-%Y-%H:%M")}.png"
 
     end
 

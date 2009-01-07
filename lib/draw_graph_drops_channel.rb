@@ -27,9 +27,6 @@ drops.each do |d|
 end
 unless samples.empty?
   Gnuplot.open do |gp|
-#File.open("gnuplot.dat", "w") do |gp|
-  #collect samples into vectors
-
     samples.collect! {|s| s.to_f}
    	Gnuplot::Plot.new(gp) do |plot|
       plot.term  "png"
@@ -38,7 +35,6 @@ unless samples.empty?
         ds.using = "1"
         ds.with = "boxes fs solid"
       end
- #   plot.output "dropped_calls_by_channel-#{starttime.strftime("%m-%d-%Y-%H:%M")}-#{endtime.strftime("%m-%d-%Y-%H:%M")}.png"
     end
 
   end
