@@ -1,15 +1,15 @@
 graphs:
   call_avg_number:
     script: draw_graph_call_avg_num.rb
-    run_time:
+    time_frames:
       - day
       - month
       - week
     directory: call_avg_number
-    source: all
+    source: "vgw001.chi.full.0"
   drops_by_channel:
     script: draw_graph_drops_channel.rb
-    run_time:
+    time_frames:
       - day
       - month
       - week
@@ -17,7 +17,7 @@ graphs:
     source: all
   num_open_calls:
     script: draw_graph_num_open_calls.rb
-    run_time:
+    time_frames:
       - day
       - month
       - week
