@@ -1,14 +1,14 @@
 require 'time'
 require 'rubygems'
 #gem 'gnuplot'
-require 'moving_avg'
-require 'vgw_database'
+require 'lib/moving_avg'
+require 'lib/call_data'
 require 'active_config'
 
 #requires calls_data.yml configuration file
 #one line of config
 
-config = ActiveConfig.new(:path => ".")
+config = ActiveConfig.new(:path => "config/")
 DIRECTORY = config.calls_data.directory ? config.calls_data.directory : "."
 SEARCH_TERM = config.calls_data.search_term ? config.calls_data.search_term : "**/vgw00*"
 #Parse the data from stdin

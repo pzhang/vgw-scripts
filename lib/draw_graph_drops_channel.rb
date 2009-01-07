@@ -3,7 +3,7 @@ require 'rubygems'
 #gem 'gnuplot'
 require 'gnuplot'
 require 'moving_avg'
-require 'vgw_database'
+require 'call_data'
 
 #Parse the data from stdin
 starttime = Time.parse(ARGV[0]) if ARGV[0]
@@ -17,7 +17,7 @@ if source && !source == "all"
     find_conditions << source
 end
 
-drops = CallsData.find(:all, :conditions => find_conditions,:order => "channel ASC")
+drops = CallData.find(:all, :conditions => find_conditions,:order => "channel ASC")
 samples = []
 drops.each do |d|
   if d.channel

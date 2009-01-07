@@ -1,6 +1,6 @@
 require 'time'
 require 'gnuplot'
-require 'vgw_database'
+require 'call_data'
 starttime = Time.parse(ARGV[0]) if ARGV[0]
 starttime ||= (Time.now - 86400)
 endtime = Time.parse(ARGV[1]) if ARGV[1]
@@ -15,7 +15,7 @@ if source && !source == "all"
     find_conditions << source
 end
 
-samples = CallsData.find(:all, :conditions => find_conditions,
+samples = CallData.find(:all, :conditions => find_conditions,
                                                :order => "time ASC")
 samples.each do |s|
   if s.event == "close"

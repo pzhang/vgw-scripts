@@ -17,6 +17,6 @@ ActiveRecord::Base.establish_connection(
   :database => database
 )
 
-class CallsData < ActiveRecord::Base
+class CallData < ActiveRecord::Base
   set_table_name "calls_data"
 end

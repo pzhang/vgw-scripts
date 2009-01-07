@@ -1,20 +1,15 @@
 require 'rubygems'
 require 'moving_avg'
-require 'vgw_database'
+require 'call_data'
 require 'gnuplot'
 require 'time'
 require 'set'
 require 'active_config'
 
-config = ActiveConfig.new(:path => ".")
-if config.call_avg_number
-  sample_interval = config.call_avg_number.sample_interval
-  window_size = config.call_avg_number.window_size
-  smoothing_factor = config.call_avg_number.smoothing_factor 
-end
-sample_interval ||= 30
-window_size ||= 300
-smoothing_factor ||= 0.1
+config = ActiveConfig.new(:path => "../config")
+sample_interval = config.call_avg_number.sample_interval || 30
+window_size = config.call_avg_number.window_size || 300
+smoothing_factor = config.call_avg_number.smoothing_factor || 0.1
 starttime = ARGV[0] ? Time.parse(ARGV[0]) : (Time.now - 86400)
 endtime = ARGV[1] ? Time.parse(ARGV[1]) : (Time.now)
 source = ARGV[2] ? ARGV[2] : "all"
@@ -31,7 +26,7 @@ Gnuplot.open do |gp|
     find_conditions[0] += " AND source = ?"
     find_conditions << source
   end
-  points = CallsData.find(:all, :conditions => find_conditions, :order => "time ASC")
+  points = CallData.find(:all, :conditions => find_conditions, :order => "time ASC")
   event_types = Set.new
   points.each {|s| event_types << s.event}
  

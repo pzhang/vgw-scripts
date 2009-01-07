@@ -2,7 +2,7 @@ require 'ftools'
 require 'rubygems'
 require 'active_config'
 require 'time'
-config = ActiveConfig.new(:path => '.')
+config = ActiveConfig.new(:path => 'config/')
 
 config.graphs.graphs.each_pair do |k, v|
 
@@ -39,6 +39,6 @@ config.graphs.graphs.each_pair do |k, v|
       source = v[:source]
     end  
     puts "generating #{filename}"
-    system "ruby #{v[:script]} #{start_time} #{end_time} #{source} > #{file_path}"
+    system "cd lib && ruby #{v[:script]} #{start_time} #{end_time} #{source} > #{file_path}"
   end
 end
