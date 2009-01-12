@@ -4,8 +4,8 @@ require 'active_config'
 require 'moving_avg'
 
 class DataHandler
-  attr_accessor :config_path, :config_file, :x_data, :config
-  attr_reader :data
+  attr_accessor :config_path, :config_file, :x_data, :config 
+  attr_reader :data, :handled_data
   def initialize(path, file = nil)
       @config_path = path
       @config_file = file
@@ -39,7 +39,10 @@ class DataHandler
   def get_column(column_name)
     return @data.map {|d| d.send(column_name.to_sym)}
   end
-  
+  def handled_data
+    @handled_data ||= get_handled_data
+    return @handled_data
+  end
   def get_handled_data
     handled_data = []
     if config['moving_average']
@@ -54,7 +57,29 @@ class DataHandler
       handled_data = custom_aggregate
     end
     return handled_data
-  end  
+  end
+  
+  def get_summary_data
+    raw_d = handled_data
+    sum_data = {}
+    if handled_data.class == Hash
+      handled_data.each_pair do |k, v|
+        sorted_data = v[1].sort
+        sum = 0
+        sorted_data.each {|s| sum+=s}
+        agg_hash = {'min' => sorted_data.first,
+                    'max' => sorted_data.last,
+                    'average' => (sum.to_f / sorted_data.size.to_f)}
+        sum_data[k] = agg_hash
+      end    
+    elsif handled_data.class == Array
+      sum = 0
+      handled_data.each {|h| sum += h}
+      sum_data["sum_data"] = {"average" => (sum.to_f / handled_data.size.to_f)}
+    end
+    return sum_data
+  end
+    
   def custom_aggregate
     custom_config = config['custom_aggregate']
     agg_data = {}
@@ -63,14 +88,14 @@ class DataHandler
       counter = 0
       c_snap = []
       data.each do |d| 
-        if v['increasing'].include?(d.send(k))
+        if v['increasing'].include?(d.send(k.to_sym))
           counter += 1
-        elsif v['decreasing'].include?(d.send(k))
+        elsif v['decreasing'].include?(d.send(k.to_sym))
           counter -= 1
         end
         c_snap << counter
       end
-      agg_data[k] = [x, c_snap] unless [x,c_snap].flatten.empty?
+      agg_data[v['name'] || k] = [x, c_snap] unless [x,c_snap].flatten.empty?
     end    
     return agg_data
   end

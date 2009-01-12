@@ -1,2 +1,28 @@
 directory: "../12"
-search_term: "**/vgw004*"
+search_term: "**/vgw00*"
+parse_regexes:
+  -
+    regex: "CONGESTION.*Busy"
+    static_data:  
+      event: "congestion"
+    dynamic_data:
+  -
+    regex: "Busy\("
+    static_data:
+      event: "busy"
+    dynamic_data:
+  -
+    regex: "Dial\(\"SIP\/"  
+    static_data:
+      event: "dialed"
+    dynamic_data:
+  -
+    regex: "Hungup 'Zap\/"
+    static_data:
+      event: "close"
+    dynamic_data:
+  -
+    regex: "Accepting call from"
+    static_data:
+      event: "open"
+    dynamic_data:

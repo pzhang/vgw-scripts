@@ -6,5 +6,3 @@ active_config
 gnuplot
 ar-extensions
 
-database should be
-CREATE TABLE <name> (id serial, time timestamp, channel integer, event varchar(255), code integer, number integer, source varchar(255), PRIMARY KEY(id))

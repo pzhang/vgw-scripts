@@ -2,6 +2,7 @@ require 'rubygems'
 require 'activerecord'
 require 'ar-extensions'
 require 'active_config'
+require 'ar-extensions/import/postgresql'
 
 config = ActiveConfig.new(:path => ".")
 
@@ -18,5 +19,5 @@ ActiveRecord::Base.establish_connection(
 )
 
 class CallData < ActiveRecord::Base
-  set_table_name "calls_data"
+  set_table_name "call_data"
 end

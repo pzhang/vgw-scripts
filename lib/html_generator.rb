@@ -6,51 +6,72 @@ class HTMLGenerator
   def initialize(dir)
     @search_dir = File.expand_path(dir)
   end
-  def make_all_pages(destination = ".")
+  def make_all_pages(destination = ".", summary_data = {}, path_list = [], options = {})
     destination = File.expand_path(destination)
     File.makedirs(destination)
-    Dir.chdir(search_dir)
+    Dir.chdir(destination)
     dirlist = Dir.glob("*")
-    File.open(File.join(destination, "index.html"), "w") do |f|
-      doc = generate_index(dirlist)
-      f.write(doc)
-    end
-    dirlist.each do |d|
-      Dir.chdir(File.join(search_dir, d))
-      pics = Dir.glob("**/*.png")
-      pics.map! {|p| File.join(Dir.pwd, p)}
-      File.open(File.join(destination, "#{d}.html"), "w") do |f|
-        doc = generate_page(pics)
+    if options[:regenerate_index] != false
+      File.open(File.join(destination, "index.html"), "w") do |f|
+        doc = generate_index(dirlist, summary_data, path_list)
         f.write(doc)
       end
     end
-  end
-  def  generate_page(list)
-    doc = ""
-    doc += "<ul>"
-    list.each do |l|
-      doc += "<l><img src = \"#{l}\" />"
+    File.open(File.join(destination,
+              DateTime.now.strftime("%m_%d_%Y")) + ".html", "w") do |f|
+      doc = generate_page(path_list, :summary_data => summary_data)
+      f.write(doc)
     end
-    doc += "</ul>"
+
+  end
+  #deprecated: this does the same things as the first part of generate index
+  def  generate_page(list, options = {})
+    doc = "<p> Graphs for #{options[:date]}" if options[:date]
+    doc ||= " "
+    doc += generate_result_table(list, options[:summary_data])
     return page_gen(doc)
   end
 
-  def generate_index(list)
+  def generate_result_table(list, summary_data = {})
     doc = ""
-
-    Dir.chdir(File.join(search_dir, DateTime.now.strftime("%m_%d_%Y")))
-    img_list = Dir.glob("**/*.png")   
-    doc += "<ul>"
-    img_list.each do |l|
-      doc += "<l><img src = \"#{File.join(Dir.pwd, l)}\" />"
-    end
-    doc += "</ul>"
-
-    doc += "<ul>"
+    doc += "<table><tr>"
+    c = 0
+    sum_list = list.dup
     list.each do |l|
-      doc += "<l><a href = \"#{l}.html\">#{l}</a>"
+      doc += "<td><img src = \"#{l}\" height = \"250\" width = \"250\"/></td>"
+      if (c % 3 == 2)
+        doc += "</tr><tr>" 
+        3.times do |i|
+          doc += "<td>"
+          doc += "<table><tr>"
+          d = 0 
+          summary_data[sum_list.shift].each_pair do |k, v|
+            doc += "<td><p><b>#{k} : </b></p>"
+            v.each_pair do |k1, v1|
+              doc += "<p style = \"font-size:55%\" >#{k1} : #{v1}</p>"
+            end
+            doc += "</td>"
+            doc += "</tr><tr>" if (d % 2 == 1)
+            d += 1
+          end
+          doc += "</table>"
+          doc += "</td>"
+        end
+        doc += "</tr><tr>"
+      end
+      c += 1
     end
-    doc += "</ul>"
+    doc += "</tr></table>"
+    return doc
+  end
+
+  def generate_index(list, summary_data = {}, img_list = [])
+    doc = ""
+    doc = "<p> Graphs for #{DateTime.now.strftime("%m/%d/%Y")}</p>"
+    doc += generate_result_table(img_list, summary_data)
+    list.each do |l|
+      doc += "<p><a href = \"#{l}\">#{l}</a></p>"
+    end
     return page_gen(doc)
   end
   def page_gen(doc)

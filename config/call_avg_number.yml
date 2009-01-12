@@ -1,10 +1,28 @@
-events:
-  - dialed
-  - chanunavail
-  - answered
-  - congestion
-  - close
-  - busy
 sample_interval: 30
 window_size: 300
 smoothing_factor: 0.1
+graph:
+  plot:
+    term: "png"
+    xdata: "time"
+    timefmt: "\"%m/%d-%H:%M:%S\""
+    format: "x \"%m/%d %H:%M\""
+    xtics: "rotate by 90"
+    ylabel: "\"Calls / Second\""
+    ytics: "nomirror"
+  data_set:
+    using: "1:2"
+    with: "lines"
+data:
+  statement: "event IN(:events)"
+  bindings:
+    events:
+      - dialed
+      - chanunavail
+      - answered
+      - congestion
+      - close
+      - busy
+  order: "time ASC"
+  moving_average: "event"
+  x_data: "time"  

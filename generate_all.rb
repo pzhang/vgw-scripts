@@ -7,14 +7,16 @@ require 'date'
 require 'graph_wrapper'
 require 'data_handler'
 require 'html_generator'
+
 config = ActiveConfig.new(:path => 'config/')
 
-start_time = ARGV[0] ? DateTime.parse(ARGV[0]) : nil
-end_time = ARGV[1] ? DateTime.parse(ARGV[1]) : nil
-
+summary_data = {}
+done = []
 config.graphs.graphs.each_pair do |k, v|
 
   v[:time_frames].each do |r|
+    start_time = ARGV[0] ? DateTime.parse(ARGV[0]) : nil
+    end_time = ARGV[1] ? DateTime.parse(ARGV[1]) : nil
     case r
       when "day"
         start_time ||= DateTime.now - DateTime.now.day_fraction
@@ -39,18 +41,21 @@ config.graphs.graphs.each_pair do |k, v|
         file_path = File.join(file_path, v[:directory])
       end
     end
-    file_path ||= "."
     File.makedirs(file_path)
     file_path = File.join(file_path, filename)
     source = v[:source]
     source ||= "all"
-    data = DataHandler.new("config/", v[:config])
-    data.get_data(start_time, end_time, source)
-    grapher = GraphWrapper.new("config/", v[:config])
-    samples = data.get_handled_data
-    puts "got data"
-    grapher.plot(samples, file_path) unless samples.empty?
+    unless done.include?(file_path)
+      data = DataHandler.new("config/", v[:config])
+      grapher = GraphWrapper.new("config/", v[:config])
+      data.get_data(start_time, end_time, source)
+      samples = data.get_handled_data
+      summary_data[file_path] = data.get_summary_data
+      puts "got data"
+      grapher.plot(samples, file_path) unless samples.empty?
+    end
+    done << file_path
   end
 end
-gen = HtmlGenerator.new("graphs")
-gen.make_links_pages("pages")
+gen = HTMLGenerator.new("graphs")
+gen.make_all_pages("pages", summary_data, done.uniq)

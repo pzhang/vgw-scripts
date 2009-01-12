@@ -1,3 +1,4 @@
+#! usr/bin/ruby
 require 'time'
 require 'rubygems'
 #gem 'gnuplot'
@@ -9,13 +10,13 @@ require 'active_config'
 #one line of config
 
 config = ActiveConfig.new(:path => "config/")
-DIRECTORY = config.calls_data.directory ? config.calls_data.directory : "."
-SEARCH_TERM = config.calls_data.search_term ? config.calls_data.search_term : "**/vgw00*"
+DIRECTORY = config.import_data.directory ? config.import_data.directory : "."
+SEARCH_TERM = config.import_data.search_term ? config.import_data.search_term : "**/vgw00*"
+PARSE_REGEXES = config.import_data.parse_regexes ? config.import_data.parse_regexes : []
 #Parse the data from stdin
 samples = []
 last_zap = {}
 updates = []
-noop_types = []
 Dir.chdir(DIRECTORY)
 files = Dir.glob(SEARCH_TERM)
 puts "files to be retrieved: "
@@ -24,52 +25,66 @@ files.each do |f|
  
   puts "got #{f.inspect}"
   updates = []
+  fields = Set.new
   last_dialed = {}
   readfile = File.new(f, "r")
     while readfile.gets
       #REGEXES to parse events out of logs.
-      event = nil
+      line = {}
       case $_
-        #when /CHANUNAVAIL.*Busy/                     : :chan_unavail
         when /CHANUNAVAIL.*Busy\("SIP\/10.224.24.145-(.{8})/   
-          event = :CHANUNAVAIL
-          channel = last_zap[$1]
-        when /CHANUNAVAIL.*NoOp\("SIP\/10.224.24.145-(.{8}).*"([A-Z]* HUC: \d*)"/ 
-          event = $2
-          noop_types << event
-          num = last_dialed[$1]
-          code = event.match(/\d+/)[0]
-        when /CONGESTION.*Busy/                     
-          event = :congestion
-        when /Busy\(/                               
-          event =  :busy
+          line[:event] = 'CHANUNAVAIL'
+          line[:channel] = last_zap[$1]
+          fields << :event << :channel
+        when /CHANUNAVAIL.*NoOp\("SIP\/10.224.24.145-(.{8}).*"([A-Z]* HUC: (\d*))"/ 
+          line[:event] = $2
+          line[:number] = last_dialed[$1]
+          line[:code] = $3
+          fields << :event << :number << :code
         when /Dial\("SIP\/10.224.24.145-(.{8})", "Zap\/[^\/]*\/(\d*)/
-          event = :DIALED
+          line[:event] = 'DIALED'
+          event = 'DIALED'
+          fields << :event
           last_dialed[$1] = $2
-        when /Dial\("SIP\//
-          event = :DIALED
         when /Zap\/(\d{1,2})-\d{1,2} is proceeding passing it to SIP\/10.224.24.145-(.{8})/
           last_zap[$2] = $1
-          nil
-        when /Hungup 'Zap\//             
-          event = :close
-        when /Accepting call from/            
-          event = :open
         when /answered SIP\/10.224.24.145-(.{8})/
-          event = :answered
-          num = last_dialed[$1]          
+          line[:event] = 'answered'
+          line[:number] = last_dialed[$1]
+          fields << :event << :number
       end
-  
-      if event
+      PARSE_REGEXES.each do |pg|
+        if $_.match(/#{pg['regex']}/)
+          (pg['static_data'] || {}).each_pair do |k, v|
+            fields << k.to_sym
+            line[k.to_sym] ||= v
+          end
+          (pg['dynamic_data'] || {}).each_pair do |k, v|
+            fields << k.to_sym
+            line[k.to_sym] ||= $~[v.to_i]
+          end
+        end
+      end
+
+      unless line.empty?
         date_str = $_.match(/^\[([^\]]+)\]/)[1]
-        channel = nil unless event == :CHANUNAVAIL
-        num = nil unless (event == :answered || noop_types.include?(event))
-        date = Time.parse(date_str)
-        date -= 365*24*60*60 if date > Time.now
-        updates << [date, event.to_s.downcase, channel, code, num,f.split("/").last]
+        time = Time.parse(date_str)
+        time -= 365*24*60*60 if time > Time.now
+        line[:source] = f.split("/").last
+        line[:time] = time
+        fields << :source << :time
+        updates << line
       end
     end
-    fields = [:time, :event, :channel,:code, :number,:source]
+    updates.map! do |u| 
+      fields.map do |f| 
+        if u[f] 
+          u[f].to_s.downcase
+        else
+          nil 
+        end
+      end
+    end
     puts "importing #{updates.size} entries"
-    puts CallsData.import fields, updates, :validate => false unless updates.empty?
+    puts CallData.import fields.to_a, updates, :validate => false unless updates.empty?
 end
