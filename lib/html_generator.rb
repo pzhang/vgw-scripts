@@ -32,36 +32,42 @@ class HTMLGenerator
     return page_gen(doc)
   end
 
-  def generate_result_table(list, summary_data = {})
+  def generate_result_table(path_hash, summary_data = {})
     doc = ""
-    doc += "<table><tr>"
-    c = 0
-    sum_list = list.dup
-    list.each do |l|
-      doc += "<td><img src = \"#{l}\" height = \"250\" width = \"250\"/></td>"
-      if (c % 3 == 2)
-        doc += "</tr><tr>" 
-        3.times do |i|
-          doc += "<td>"
-          doc += "<table><tr>"
-          d = 0 
-          summary_data[sum_list.shift].each_pair do |k, v|
-            doc += "<td><p><b>#{k} : </b></p>"
-            v.each_pair do |k1, v1|
-              doc += "<p style = \"font-size:55%\" >#{k1} : #{v1}</p>"
-            end
-            doc += "</td>"
-            doc += "</tr><tr>" if (d % 2 == 1)
-            d += 1
-          end
-          doc += "</table>"
-          doc += "</td>"
-        end
-        doc += "</tr><tr>"
+    path_hash.each_pair do |k, list|
+      unless list.empty?
+        doc += "<p style = \"text-align:" + 
+               "center\"><b> #{k.capitalize} Data </b></p>"
       end
-      c += 1
+      doc += "<div style = \"text-align: center\"><table><tr>"
+      c = 0
+      sum_list = list.dup
+      list.each do |l|
+        doc += "<td><img src = \"#{l}\" height = \"250\" width = \"250\"/></td>"
+        if (c % 3 == 2)
+          doc += "</tr><tr>" 
+          3.times do |i|
+            doc += "<td>"
+            doc += "<table><tr>"
+            d = 0 
+            summary_data[sum_list.shift].each_pair do |k, v|
+              doc += "<td><p style = \"font-size: 55%\"><b>#{k} : </b></p>"
+              v.each_pair do |k1, v1|
+                doc += "<p style = \"font-size:55%\" >#{k1} : #{v1}</p>"
+              end
+              doc += "</td>"
+              doc += "</tr><tr>" if (d % 2 == 1)
+              d += 1
+            end
+            doc += "</table>"
+            doc += "</td>"
+          end
+          doc += "</tr><tr>"
+        end
+        c += 1
+      end
+      doc += "</tr></table></div>"
     end
-    doc += "</tr></table>"
     return doc
   end
 
@@ -69,8 +75,9 @@ class HTMLGenerator
     doc = ""
     doc = "<p> Graphs for #{DateTime.now.strftime("%m/%d/%Y")}</p>"
     doc += generate_result_table(img_list, summary_data)
+    doc += "<p style =\"text-align: center\"> Data for other days </p> "
     list.each do |l|
-      doc += "<p><a href = \"#{l}\">#{l}</a></p>"
+      doc += "<p style = \"text-align: center \"><a href = \"#{l}\">#{l}</a></p>"
     end
     return page_gen(doc)
   end
@@ -81,6 +88,16 @@ class HTMLGenerator
          <head>
           <meta http-equiv=\"content-type\" content=\"text/html;charset=UTF-8\" />
          </head>
+          <style type=\"text/css\">
+          table
+          { 
+            margin-left: auto;
+            margin-right: auto;
+            text-align: left;
+          }
+
+          </style
+          <title> VGW reporting graphs </title>
           <body>"
     a+= doc
     a += "</body></html>"

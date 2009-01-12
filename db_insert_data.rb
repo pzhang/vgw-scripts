@@ -10,9 +10,9 @@ require 'active_config'
 #one line of config
 
 config = ActiveConfig.new(:path => "config/")
-DIRECTORY = config.import_data.directory ? config.import_data.directory : "."
-SEARCH_TERM = config.import_data.search_term ? config.import_data.search_term : "**/vgw00*"
-PARSE_REGEXES = config.import_data.parse_regexes ? config.import_data.parse_regexes : []
+DIRECTORY =  config.import_data.directory || "logs"
+SEARCH_TERM = config.import_data.search_term || "**/vgw00*"
+PARSE_REGEXES = config.import_data.parse_regexes || []
 #Parse the data from stdin
 samples = []
 last_zap = {}
@@ -78,11 +78,7 @@ files.each do |f|
     end
     updates.map! do |u| 
       fields.map do |f| 
-        if u[f] 
-          u[f].to_s.downcase
-        else
-          nil 
-        end
+        u[f] ? u[f].to_s.downcase : nil
       end
     end
     puts "importing #{updates.size} entries"

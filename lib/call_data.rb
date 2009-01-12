@@ -4,7 +4,7 @@ require 'ar-extensions'
 require 'active_config'
 require 'ar-extensions/import/postgresql'
 
-config = ActiveConfig.new(:path => ".")
+config = ActiveConfig.new(:path => "config")
 
 if config.database
   adapter = config.database.adapter 

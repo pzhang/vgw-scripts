@@ -60,6 +60,7 @@ class DataHandler
   end
   
   def get_summary_data
+    return {} if data.empty?
     raw_d = handled_data
     sum_data = {}
     if handled_data.class == Hash
@@ -67,15 +68,17 @@ class DataHandler
         sorted_data = v[1].sort
         sum = 0
         sorted_data.each {|s| sum+=s}
-        agg_hash = {'min' => sorted_data.first,
-                    'max' => sorted_data.last,
-                    'average' => (sum.to_f / sorted_data.size.to_f)}
-        sum_data[k] = agg_hash
+        sum_data[k] = {'min' => sorted_data.first,
+                       'max' => sorted_data.last,
+                       'average' => (sum.to_f / sorted_data.size.to_f)}
       end    
     elsif handled_data.class == Array
       sum = 0
+      sorted_data = handled_data.sort
       handled_data.each {|h| sum += h}
-      sum_data["sum_data"] = {"average" => (sum.to_f / handled_data.size.to_f)}
+      sum_data["sum_data"] = {"average" => (sum.to_f / handled_data.size.to_f), 
+                              "sum" => sum,
+                              "max" => sorted_data.last}
     end
     return sum_data
   end

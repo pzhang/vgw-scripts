@@ -11,8 +11,8 @@ require 'html_generator'
 config = ActiveConfig.new(:path => 'config/')
 
 summary_data = {}
-done = []
-config.graphs.graphs.each_pair do |k, v|
+done = {}
+(config.graphs.graphs || {}).each_pair do |k, v|
 
   v[:time_frames].each do |r|
     start_time = ARGV[0] ? DateTime.parse(ARGV[0]) : nil
@@ -26,7 +26,7 @@ config.graphs.graphs.each_pair do |k, v|
         start_time ||= DateTime.now - DateTime.now.mday
     end
     start_time ||= DateTime.now
-    end_time ||= DateTime.now
+    end_time ||= DateTime.now 
     filename = v[:filename] || k.to_s
     filename += "_#{start_time.strftime("%m_%d_%Y")}"+
                 "_#{end_time.strftime("%m_%d_%Y")}.png"
@@ -45,7 +45,7 @@ config.graphs.graphs.each_pair do |k, v|
     file_path = File.join(file_path, filename)
     source = v[:source]
     source ||= "all"
-    unless done.include?(file_path)
+    unless done.values.flatten.include?(file_path)
       data = DataHandler.new("config/", v[:config])
       grapher = GraphWrapper.new("config/", v[:config])
       data.get_data(start_time, end_time, source)
@@ -53,9 +53,10 @@ config.graphs.graphs.each_pair do |k, v|
       summary_data[file_path] = data.get_summary_data
       puts "got data"
       grapher.plot(samples, file_path) unless samples.empty?
+      done[r] << file_path
     end
-    done << file_path
+    done[r].uniq!
   end
 end
 gen = HTMLGenerator.new("graphs")
-gen.make_all_pages("pages", summary_data, done.uniq)
+gen.make_all_pages("pages", summary_data, done)

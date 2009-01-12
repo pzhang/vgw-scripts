@@ -26,7 +26,7 @@ def plot(data, destination = nil)
         end
       elsif data.class == Hash
         data.each_pair do |k, v|
-          plot.data << Gnuplot::DataSet.new ( v ) do |ds|
+          plot.data << Gnuplot::DataSet.new( v ) do |ds|
             ds.title = k
             config["data_set"].each_pair do |k2,v2|
               ds.send("#{k2.to_sym}=",v2)

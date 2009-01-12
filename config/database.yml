@@ -1,3 +1,2 @@
 adapter: postgresql
 database: postgres
-table: calls_data
