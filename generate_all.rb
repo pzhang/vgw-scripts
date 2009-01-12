@@ -25,8 +25,9 @@ done = {}
       when "month"
         start_time ||= DateTime.now - DateTime.now.mday
     end
+    done[r] ||= []
     start_time ||= DateTime.now
-    end_time ||= DateTime.now 
+    end_time ||= DateTime.now
     filename = v[:filename] || k.to_s
     filename += "_#{start_time.strftime("%m_%d_%Y")}"+
                 "_#{end_time.strftime("%m_%d_%Y")}.png"
