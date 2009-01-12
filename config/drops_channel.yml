@@ -1,0 +1,13 @@
+graph:
+  plot:
+    term: "png"
+  data_set:
+    title: "Drops per channel"
+    using: "1"
+    with: "boxes fs solid"
+data:
+  statement: "channel >= :channel"
+  bindings:
+    channel: 0
+  order: "channel ASC"
+  aggregate: "channel"

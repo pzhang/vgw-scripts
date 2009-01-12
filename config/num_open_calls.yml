@@ -1,0 +1,28 @@
+graph:
+  plot:
+    term: "png"
+    xdata: "time"
+    timefmt: "\"%m/%d-%H:%M:%S\""
+    format: "x \"%m/%d %H:%M\""
+    xtics: "rotate by 90"
+    ylabel: "\"Open Calls\""
+  data_set:
+    title: "Num Calls Outstanding"
+    using: "1:2"
+    with: "lines"
+data:
+  statement: "event IN(:events)"
+  bindings:
+    events:
+      - dialed
+      - close
+      - open
+  order: "time ASC"
+  custom_aggregate: 
+    event:
+      name: "Num Calls Outstanding"
+      increasing:
+        - dialed
+        - open
+      decreasing:
+        - close
