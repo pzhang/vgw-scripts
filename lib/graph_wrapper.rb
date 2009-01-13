@@ -8,14 +8,18 @@ def initialize(path, file = nil)
   @config_path = path
   @config_file = file
 end
-  
-def plot(data, destination = nil)
+def plot (data, destination)
+  real_plot(data, destination)
+  real_plot(data, destination, true)
+end
+def real_plot(data, destination = nil, small = nil)
   return unless data
   config = ActiveConfig.new(:path => config_path).send(config_file.to_sym).graph.to_hash
   Gnuplot.open do |gp|
     Gnuplot::Plot.new(gp) do |plot|
       config["plot"].each_pair do |k, v|
         eval("plot.#{k}(v)")
+        plot.size "0.5,0.7" if small
       end
       if data.class == Array
         plot.data << Gnuplot::DataSet.new( data ) do |ds|
@@ -33,6 +37,7 @@ def plot(data, destination = nil)
           end #Gnuplot dataset do
         end #data.each_pair
       end #if statement
+      destination = destination + ".small" if small
       plot.output destination
     end #gnuplot.plot
   end #gnuplot open

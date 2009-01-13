@@ -29,7 +29,7 @@ class HTMLGenerator
   end
   def  generate_page(list, options = {})
     doc = "<p><a href = \"index.html\"> Back to Index </a></p>"
-    doc += "<p> Graphs for #{options[:date]}" if options[:date]
+    doc += "<p> Data for #{options[:date]}" if options[:date]
     doc ||= " "
     doc += generate_result_table(list, options[:summary_data])
     return page_gen(doc)
@@ -46,7 +46,8 @@ class HTMLGenerator
       c = 0
       sum_list = list.dup
       list.each do |l|
-        doc += "<td><img src = \"#{l}\" height = \"300\" width = \"300\"/></td>"
+        doc += "<td><a href = \"#{l}\">" +
+         "<img src = \"#{l}.small\" height = \"300\" width = \"300\"/></a></td>"
         if (c % 3 == 2)
           doc += "</tr><tr>" 
           3.times do |i|
@@ -81,8 +82,7 @@ class HTMLGenerator
     <SELECT NAME=\"gourl\">
     <OPTION VALUE=\"\">Choose another date..."
     list.each do |l|
-      doc +=  "<OPTION VALUE=\"#{l}\">#{l}"
- #     doc += "<p style = \"text-align: center \"><a href = \"#{l}\">#{l}</a></p>"
+      doc +=  "<OPTION VALUE=\"#{l}\">#{l.gsub("_","/").gsub(".html", "")}"
     end
     doc += "</SELECT><INPUT TYPE=SUBMIT VALUE=\"Go\">
             </FORM>"
