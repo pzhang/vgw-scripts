@@ -53,8 +53,8 @@ class DataHandler
         handled_data[s[0].to_i] = s[1].size.to_f
       end
       handled_data.map! {|h| h.to_f}
-    elsif config['custom_aggregate']
-      handled_data = custom_aggregate
+    elsif config['delta_by_attr']
+      handled_data = delta_by_attr
     end
     return handled_data
   end
@@ -83,8 +83,8 @@ class DataHandler
     return sum_data
   end
     
-  def custom_aggregate
-    custom_config = config['custom_aggregate']
+  def delta_by_attr
+    custom_config = config['delta_by_attr']
     agg_data = {}
     x = data.map {|d| d.send((x_data || :time).to_sym).strftime("%m/%d-%H:%M:%S")}
     custom_config.each_pair do |k, v|

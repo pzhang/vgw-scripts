@@ -12,52 +12,57 @@ config = ActiveConfig.new(:path => 'config/')
 
 summary_data = {}
 done = {}
-(config.graphs.graphs || {}).each_pair do |k, v|
+(config.generate_all.graphs || {}).each_pair do |k, v|
 
   v[:time_frames].each do |r|
-    start_time = ARGV[0] ? DateTime.parse(ARGV[0]) : nil
-    end_time = ARGV[1] ? DateTime.parse(ARGV[1]) : nil
+    if ARGV.length == 2
+      start_time = ARGV[0] ? DateTime.parse(ARGV[0]) : nil
+      end_time = ARGV[1] ? DateTime.parse(ARGV[1]) : nil
+    elsif ARGV.length == 1
+      end_time = ARGV[0] ? DateTime.parse(ARGV[0]) : nil
+    end
+    end_time ||= DateTime.now
     case r
       when "day"
-        start_time ||= DateTime.now - DateTime.now.day_fraction
+        start_time ||= end_time - DateTime.now.day_fraction
       when "week"
-        start_time ||= DateTime.now - DateTime.now.wday
+        start_time ||= end_time - DateTime.now.wday
       when "month"
-        start_time ||= DateTime.now - DateTime.now.mday
+        start_time ||= end_time - DateTime.now.mday
     end
     done[r] ||= []
     start_time ||= DateTime.now
-    end_time ||= DateTime.now
     filename = v[:filename] || k.to_s
     filename += "_#{start_time.strftime("%m_%d_%Y")}"+
                 "_#{end_time.strftime("%m_%d_%Y")}.png"
     file_path = nil
-    if config.graphs.directory
-      file_path = File.expand_path(config.graphs.directory)
+    if config.generate_all.destination
+      file_path = File.expand_path(config.generate_all.destination)
     end
-    file_path ||= File.expand_path(".")
-    file_path = File.join(file_path, DateTime.now.strftime("%m_%d_%Y"))
+    rel_path = "graphs"
     if v[:directory]
       if file_path
-        file_path = File.join(file_path, v[:directory])
+        rel_path = File.join(rel_path, v[:directory])
       end
     end
-    File.makedirs(file_path)
-    file_path = File.join(file_path, filename)
+    File.makedirs(File.join(file_path, rel_path))
+    rel_path = File.join(rel_path, filename)
+    total_path = File.join(file_path, rel_path)
     source = v[:source]
     source ||= "all"
-    unless done.values.flatten.include?(file_path)
+    unless done.values.flatten.include?(rel_path)
       data = DataHandler.new("config/", v[:config])
       grapher = GraphWrapper.new("config/", v[:config])
       data.get_data(start_time, end_time, source)
       samples = data.get_handled_data
-      summary_data[file_path] = data.get_summary_data
+      summary_data[rel_path] = data.get_summary_data
       puts "got data"
-      grapher.plot(samples, file_path) unless samples.empty?
-      done[r] << file_path
+      grapher.plot(samples, total_path) unless samples.empty?
+      done[r] << rel_path
     end
     done[r].uniq!
   end
 end
-gen = HTMLGenerator.new("graphs")
-gen.make_all_pages("pages", summary_data, done)
+puts done.inspect
+gen = HTMLGenerator.new
+gen.make_all_pages(config.generate_all.destination, summary_data, done)

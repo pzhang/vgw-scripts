@@ -18,7 +18,7 @@ data:
       - close
       - open
   order: "time ASC"
-  custom_aggregate: 
+  delta_by_attr:
     event:
       name: "Num Calls Outstanding"
       increasing:

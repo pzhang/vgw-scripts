@@ -3,30 +3,33 @@ require 'time'
 require 'ftools'
 class HTMLGenerator
   attr_accessor :search_dir
-  def initialize(dir)
-    @search_dir = File.expand_path(dir)
+  def initialize(dir = nil)
+    @search_dir = File.expand_path(dir) if dir
   end
   def make_all_pages(destination = ".", summary_data = {}, path_list = [], options = {})
     destination = File.expand_path(destination)
     File.makedirs(destination)
     Dir.chdir(destination)
-    dirlist = Dir.glob("*")
+    File.open(File.join(destination,
+              DateTime.now.strftime("%m_%d_%Y")) + ".html", "w") do |f|
+      doc = generate_page(path_list, :summary_data => summary_data,
+                                     :date => DateTime.now.strftime("%m/%d/%Y"))
+      f.write(doc)
+    end
+    dirlist = Dir.glob("*.html")
+    dirlist << "index.html"
+    dirlist.uniq!
     if options[:regenerate_index] != false
       File.open(File.join(destination, "index.html"), "w") do |f|
         doc = generate_index(dirlist, summary_data, path_list)
         f.write(doc)
       end
     end
-    File.open(File.join(destination,
-              DateTime.now.strftime("%m_%d_%Y")) + ".html", "w") do |f|
-      doc = generate_page(path_list, :summary_data => summary_data)
-      f.write(doc)
-    end
 
   end
-  #deprecated: this does the same things as the first part of generate index
   def  generate_page(list, options = {})
-    doc = "<p> Graphs for #{options[:date]}" if options[:date]
+    doc = "<p><a href = \"index.html\"> Back to Index </a></p>"
+    doc += "<p> Graphs for #{options[:date]}" if options[:date]
     doc ||= " "
     doc += generate_result_table(list, options[:summary_data])
     return page_gen(doc)
@@ -43,7 +46,7 @@ class HTMLGenerator
       c = 0
       sum_list = list.dup
       list.each do |l|
-        doc += "<td><img src = \"#{l}\" height = \"250\" width = \"250\"/></td>"
+        doc += "<td><img src = \"#{l}\" height = \"300\" width = \"300\"/></td>"
         if (c % 3 == 2)
           doc += "</tr><tr>" 
           3.times do |i|
@@ -51,9 +54,9 @@ class HTMLGenerator
             doc += "<table><tr>"
             d = 0 
             summary_data[sum_list.shift].each_pair do |k, v|
-              doc += "<td><p style = \"font-size: 55%\"><b>#{k} : </b></p>"
+              doc += "<td><p style = \"font-size: 75%\"><b>#{k} : </b></p>"
               v.each_pair do |k1, v1|
-                doc += "<p style = \"font-size:55%\" >#{k1} : #{v1}</p>"
+                doc += "<p style = \"font-size:75%\" >#{k1} : #{"%0.3f" % v1}</p>"
               end
               doc += "</td>"
               doc += "</tr><tr>" if (d % 2 == 1)
@@ -73,12 +76,18 @@ class HTMLGenerator
 
   def generate_index(list, summary_data = {}, img_list = [])
     doc = ""
-    doc = "<p> Graphs for #{DateTime.now.strftime("%m/%d/%Y")}</p>"
-    doc += generate_result_table(img_list, summary_data)
-    doc += "<p style =\"text-align: center\"> Data for other days </p> "
+    doc += "<FORM 
+     METHOD=POST onSubmit= \"return dropdown(this.gourl)\">
+    <SELECT NAME=\"gourl\">
+    <OPTION VALUE=\"\">Choose another date..."
     list.each do |l|
-      doc += "<p style = \"text-align: center \"><a href = \"#{l}\">#{l}</a></p>"
+      doc +=  "<OPTION VALUE=\"#{l}\">#{l}"
+ #     doc += "<p style = \"text-align: center \"><a href = \"#{l}\">#{l}</a></p>"
     end
+    doc += "</SELECT><INPUT TYPE=SUBMIT VALUE=\"Go\">
+            </FORM>"
+    doc += "<p> Data for #{DateTime.now.strftime("%m/%d/%Y")}</p>"
+    doc += generate_result_table(img_list, summary_data)
     return page_gen(doc)
   end
   def page_gen(doc)
@@ -87,7 +96,6 @@ class HTMLGenerator
          <html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">
          <head>
           <meta http-equiv=\"content-type\" content=\"text/html;charset=UTF-8\" />
-         </head>
           <style type=\"text/css\">
           table
           { 
@@ -96,7 +104,25 @@ class HTMLGenerator
             text-align: left;
           }
 
-          </style
+          </style>
+         <SCRIPT TYPE=\"text/javascript\">
+          <!--
+       function dropdown(mySel)
+       {
+       var myWin, myVal;
+       myVal = mySel.options[mySel.selectedIndex].value;
+       if(myVal)
+          {
+          if(mySel.form.target)myWin = parent[mySel.form.target];
+          else myWin = window;
+          if (! myWin) return true;
+          myWin.location = myVal;
+          }
+        return false;
+        }
+        //-->
+        </SCRIPT>
+         </head>
           <title> VGW reporting graphs </title>
           <body>"
     a+= doc

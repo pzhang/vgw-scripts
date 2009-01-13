@@ -15,7 +15,6 @@ def plot(data, destination = nil)
   Gnuplot.open do |gp|
     Gnuplot::Plot.new(gp) do |plot|
       config["plot"].each_pair do |k, v|
-        puts "#{k} : #{v}"
         eval("plot.#{k}(v)")
       end
       if data.class == Array
