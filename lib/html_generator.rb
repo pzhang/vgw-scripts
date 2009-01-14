@@ -21,7 +21,7 @@ class HTMLGenerator
     dirlist.uniq!
     if options[:regenerate_index] != false
       File.open(File.join(destination, "index.html"), "w") do |f|
-        doc = generate_index(dirlist, summary_data, path_list)
+        doc = generate_index(dirlist.sort, summary_data, path_list)
         f.write(doc)
       end
     end

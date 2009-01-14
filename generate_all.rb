@@ -57,8 +57,10 @@ done = {}
       samples = data.get_handled_data
       summary_data[rel_path] = data.get_summary_data
       puts "got data"
-      grapher.plot(samples, total_path) unless samples.empty?
-      done[r] << rel_path
+      unless samples.empty?
+        grapher.plot(samples, total_path) 
+        done[r] << rel_path
+      end
     end
     done[r].uniq!
   end
