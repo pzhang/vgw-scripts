@@ -2,7 +2,7 @@ graph:
   plot:
     term: "png"
     xdata: "time"
-    timefmt: "\"%m/%d-%H:%M:%S\""
+    timefmt: "\"%m/%d/%Y-%H:%M:%S\""
     format: "x \"%m/%d %H:%M\""
     xtics: "rotate by 90"
     ylabel: "\"Open Calls\""

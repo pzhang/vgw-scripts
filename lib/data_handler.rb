@@ -21,8 +21,8 @@ class DataHandler
       else
         statement[0] += " AND source = :source"
       end
-    end
     statement[1][:source] = source
+    end
     if @config['statement']
       statement[0] += " AND #{@config['statement']}"
       bindings = {}
@@ -71,6 +71,13 @@ class DataHandler
         sum_data[k] = {'min' => sorted_data.first,
                        'max' => sorted_data.last,
                        'average' => (sum.to_f / sorted_data.size.to_f)}
+        if config['summary']
+          if config['summary']['sum'] == 'integration'
+            sum_data[k]['sum'] = integrate(v)
+          elsif config['summary']['sum'] != nil
+            sum-data[k]['sum'] = sum
+          end
+        end     
       end    
     elsif handled_data.class == Array
       sum = 0
@@ -82,11 +89,21 @@ class DataHandler
     end
     return sum_data
   end
-    
+  def integrate(data_array = [])
+    sum = 0
+    i = 0
+    while i < data_array[0].length - 1
+      sum += (((data_array[1][i] + data_array[1][i+1]) / 2.0) * 
+             (Time.parse(data_array[0][i+1]) - Time.parse(data_array[0][i])))
+      i += 1
+    end
+    return sum
+  end 
+
   def delta_by_attr
     custom_config = config['delta_by_attr']
     agg_data = {}
-    x = data.map {|d| d.send((x_data || :time).to_sym).strftime("%m/%d-%H:%M:%S")}
+    x = data.map {|d| d.send((x_data || :time).to_sym).strftime("%m/%d/%Y-%H:%M:%S")}
     custom_config.each_pair do |k, v|
       counter = 0
       c_snap = []
@@ -114,12 +131,12 @@ class DataHandler
   def calculate_moving_average(column_name)
     ma = MovingAverage.new
     moving_avg_data = []
-    @data.each do |d|
+    data.each do |d|
       ma.add_event( d.send((x_data || :time).to_sym), d.send(column_name) ) do |s|
         moving_avg_data << s
       end
     end
-    x = moving_avg_data.collect {|mv| mv[(x_data || :time).to_sym].strftime("%m/%d-%H:%M:%S")}
+    x = moving_avg_data.collect {|mv| mv[(x_data || :time).to_sym].strftime("%m/%d/%Y-%H:%M:%S")}
     r_data = {}
     ma.event_types.each do |e|
       r_data[e] = [x, moving_avg_data.collect {|m| m[e].to_f}]

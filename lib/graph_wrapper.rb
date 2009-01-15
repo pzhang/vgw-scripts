@@ -19,8 +19,8 @@ def real_plot(data, destination = nil, small = nil)
     Gnuplot::Plot.new(gp) do |plot|
       config["plot"].each_pair do |k, v|
         instance_eval("plot.#{k}(v)")
-        plot.size "0.5,0.7" if small
       end
+      plot.size "0.5,0.7" if small
       if data.class == Array
         plot.data << Gnuplot::DataSet.new( data ) do |ds|
           config["data_set"].each_pair do |k,v|

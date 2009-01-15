@@ -14,7 +14,6 @@ DIRECTORY =  config.import_data.directory || "logs"
 SEARCH_TERM = config.import_data.search_term || "**/vgw00*"
 PARSE_REGEXES = config.import_data.parse_regexes || []
 #Parse the data from stdin
-samples = []
 last_zap = {}
 updates = []
 Dir.chdir(DIRECTORY)

@@ -24,11 +24,11 @@ done = {}
     end_time ||= DateTime.now
     case r
       when "day"
-        start_time ||= end_time - DateTime.now.day_fraction
+        start_time ||= end_time - end_time.day_fraction
       when "week"
-        start_time ||= end_time - DateTime.now.wday
+        start_time ||= end_time - end_time.wday
       when "month"
-        start_time ||= end_time - DateTime.now.mday
+        start_time ||= end_time - end_time.mday
     end
     done[r] ||= []
     start_time ||= DateTime.now

@@ -21,7 +21,7 @@ class HTMLGenerator
     dirlist.uniq!
     if options[:regenerate_index] != false
       File.open(File.join(destination, "index.html"), "w") do |f|
-        doc = generate_index(dirlist.sort, summary_data, path_list)
+        doc = generate_index(dirlist.sort.reverse, summary_data, path_list)
         f.write(doc)
       end
     end
@@ -37,30 +37,38 @@ class HTMLGenerator
 
   def generate_result_table(path_hash, summary_data = {})
     doc = ""
-    path_hash.each_pair do |k, list|
-      unless list.empty?
-        doc += "<p style = \"text-align:" + 
-               "center\"><b> #{k.capitalize} Data </b></p>"
+    lists = []
+    lists << ['day' , path_hash['day'] || []] <<
+             ['week', path_hash['week'] || []] << 
+             ['month',path_hash['month'] || []]
+    lists.compact!
+    lists.each do |list|
+      doc += "<p style = \"text-align:" + 
+             "center\"><b> #{list[0].capitalize} Data </b></p>"
+      matches = list[1].first.match(/(\d+_\d+_\d+)_(\d+_\d+_\d+)/)
+      if matches
+      doc += "<p style = \"text-align:" +
+             "center\"> #{matches[1].gsub("_","/")} - #{matches[2].gsub("_","/")}</p>"
       end
       doc += "<div style = \"text-align: center\"><table><tr>"
       c = 0
-      sum_list = list.dup
-      list.each do |l|
+      sum_list = list[1].dup
+      list[1].each do |l|
         doc += "<td><a href = \"#{l}\">" +
          "<img src = \"#{l}.small\" height = \"300\" width = \"300\"/></a></td>"
         if (c % 3 == 2)
           doc += "</tr><tr>" 
           3.times do |i|
-            doc += "<td>"
+            doc += "<td valign = \"top\">"
             doc += "<table><tr>"
             d = 0 
             summary_data[sum_list.shift].each_pair do |k, v|
-              doc += "<td><p style = \"font-size: 75%\"><b>#{k} : </b></p>"
+              doc += "<td valign = \"top\"><p style = \"font-size: 75%\"><b>#{k} : </b></p>"
               v.each_pair do |k1, v1|
                 doc += "<p style = \"font-size:75%\" >#{k1} : #{"%0.3f" % v1}</p>"
               end
               doc += "</td>"
-              doc += "</tr><tr>" if (d % 2 == 1)
+              doc += "</tr><tr>" if (d % 3 == 2)
               d += 1
             end
             doc += "</table>"
@@ -78,14 +86,13 @@ class HTMLGenerator
   def generate_index(list, summary_data = {}, img_list = [])
     doc = ""
     doc += "<FORM 
-     METHOD=POST onSubmit= \"return dropdown(this.gourl)\">
+     METHOD=POST onChange= \"return dropdown(this.gourl)\">
     <SELECT NAME=\"gourl\">
     <OPTION VALUE=\"\">Choose another date..."
     list.each do |l|
       doc +=  "<OPTION VALUE=\"#{l}\">#{l.gsub("_","/").gsub(".html", "")}"
     end
-    doc += "</SELECT><INPUT TYPE=SUBMIT VALUE=\"Go\">
-            </FORM>"
+    doc += "</SELECT></FORM>"
     doc += "<p> Data for #{DateTime.now.strftime("%m/%d/%Y")}</p>"
     doc += generate_result_table(img_list, summary_data)
     return page_gen(doc)
@@ -101,7 +108,7 @@ class HTMLGenerator
           { 
             margin-left: auto;
             margin-right: auto;
-            text-align: left;
+            text-align: top;
           }
 
           </style>
@@ -123,7 +130,7 @@ class HTMLGenerator
         //-->
         </SCRIPT>
          </head>
-          <title> VGW reporting graphs </title>
+          <title> VGW Reporting Graphs </title>
           <body>"
     a+= doc
     a += "</body></html>"
