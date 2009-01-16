@@ -45,10 +45,10 @@ class HTMLGenerator
     lists.each do |list|
       doc += "<p style = \"text-align:" + 
              "center\"><b> #{list[0].capitalize} Data </b></p>"
-      matches = list[1].first.match(/(\d+_\d+_\d+)_(\d+_\d+_\d+)/)
+      matches = (list[1].first || "").match(/(\d+_\d+_\d+)_(\d+_\d+_\d+)/)
       if matches
-      doc += "<p style = \"text-align:" +
-             "center\"> #{matches[1].gsub("_","/")} - #{matches[2].gsub("_","/")}</p>"
+        doc += "<p style = \"text-align:" +
+               "center\"> #{matches[1].gsub("_","/")} - #{matches[2].gsub("_","/")}</p>"
       end
       doc += "<div style = \"text-align: center\"><table><tr>"
       c = 0
