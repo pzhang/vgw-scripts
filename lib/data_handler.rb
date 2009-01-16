@@ -12,6 +12,7 @@ class DataHandler
       @config = ActiveConfig.new(:path => config_path).send(config_file.to_sym).data.to_hash
       @x_data = @config["x_data"]
   end
+
   def get_data(start_date, end_date, source = "all")
     statement = ["time BETWEEN :start_date AND :end_date",
                  {:start_date => start_date,:end_date => end_date}]
@@ -129,7 +130,8 @@ class DataHandler
   end
   
   def calculate_moving_average(column_name)
-    ma = MovingAverage.new
+    ma = MovingAverage.new(config['sample_interval'], config['window_size'],
+                           config['smoothing_factor'])
     moving_avg_data = []
     data.each do |d|
       ma.add_event( d.send((x_data || :time).to_sym), d.send(column_name) ) do |s|

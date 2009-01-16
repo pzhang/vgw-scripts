@@ -6,3 +6,28 @@ active_config
 gnuplot
 ar-extensions
 
+
+Normal operation :
+   point db_insert_data.rb at folder that contains data, and it will search for
+   the defined search term.  All of this can be done in the config file
+   import_data.yml .
+   
+   running generate_all.rb will generate the graphs and webpages for today,
+   this week, and this month.  Giving it one command line argument custom
+   generates day, week, month data for the date given.  Two commands specifies
+   a start date and end date.
+
+Adding different reporting:
+
+   The import_data config has a definition of regexes and the user can define
+   categories of data that is to be parsed from the regexes.  However, if a new
+   category is added, the corresponding column in the database table must be
+   made as well.
+
+   Define a broad config for the new report in the generate_all.yml config file
+   such as where this report's config file is, where to put the output as well 
+   as the source and time periods(day, week, and/or month) desired.
+   
+   In the individual config files, the user defines the graphing options to 
+   be set as well as the various data handling options.  See the configuration
+   files for more details.
